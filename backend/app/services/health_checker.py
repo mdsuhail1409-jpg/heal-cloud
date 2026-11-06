@@ -146,5 +146,15 @@ def execute_monitoring_check(
     db.add(check)
     db.flush()
 
+    # Trigger Incident Detection & Diagnosis evaluation
+    from app.services.detection_engine import process_monitoring_sample_for_incidents
+    process_monitoring_sample_for_incidents(
+        db=db,
+        service=service,
+        endpoint=endpoint,
+        check=check,
+        sample=sample,
+    )
+
     return sample
 

@@ -32,6 +32,17 @@ from app.schemas.service import (
     MetricSampleRead,
     HealthCheckResult,
 )
+from app.schemas.incident import (
+    IncidentCreate,
+    IncidentUpdate,
+    IncidentAcknowledgeRequest,
+    IncidentAssignRequest,
+    IncidentDiagnoseRequest,
+    IncidentEventResponse,
+    DiagnosisResponse,
+    IncidentResponse,
+    IncidentListResponse,
+)
 
 __all__ = [
     "UserCreate",
@@ -61,4 +72,13 @@ __all__ = [
     "MonitoringCheckRead",
     "MetricSampleRead",
     "HealthCheckResult",
+    "IncidentCreate",
+    "IncidentUpdate",
+    "IncidentAcknowledgeRequest",
+    "IncidentAssignRequest",
+    "IncidentDiagnoseRequest",
+    "IncidentEventResponse",
+    "DiagnosisResponse",
+    "IncidentResponse",
+    "IncidentListResponse",
 ]

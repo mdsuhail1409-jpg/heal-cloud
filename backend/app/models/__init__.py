@@ -8,6 +8,14 @@ from app.models.service import (
     MetricSample,
     HealthStatusEnum,
 )
+from app.models.incident import (
+    Incident,
+    IncidentEvent,
+    Diagnosis,
+    IncidentSeverityEnum,
+    IncidentStatusEnum,
+    IncidentEventTypeEnum,
+)
 
 __all__ = [
     "User",
@@ -20,4 +28,10 @@ __all__ = [
     "MonitoringCheck",
     "MetricSample",
     "HealthStatusEnum",
+    "Incident",
+    "IncidentEvent",
+    "Diagnosis",
+    "IncidentSeverityEnum",
+    "IncidentStatusEnum",
+    "IncidentEventTypeEnum",
 ]

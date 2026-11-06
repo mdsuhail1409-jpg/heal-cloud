@@ -88,3 +88,19 @@
 - **Consequences:**
   - *Positive:* Asynchronous execution, horizontal worker scalability, distributed locking (`redlock`) preventing duplicate executions on the same service.
   - *Trade-offs:* Requires running and monitoring separate worker processes alongside the web API.
+
+---
+
+## ADR-007: Threshold-Based Detection, Duplicate Incident Suppression & Explainable Diagnosis
+
+- **Status:** Accepted
+- **Date:** 2026-11-06
+- **Context:**
+  Observability systems suffer from alert storms where multiple failures for the same root cause spawn hundreds of disjointed tickets. Furthermore, automated root-cause engines must be explainable and deterministic—guessing or hallucinating causes when telemetry is insufficient causes operator distrust.
+- **Decision:**
+  Implement a deterministic detection engine with 5 explicit threshold rules (`SERVICE_UNAVAILABLE`, `REPEATED_HEALTH_CHECK_FAILURE`, `RESPONSE_TIME_EXCEEDED`, `EXCESSIVE_CONSECUTIVE_FAILURES`, and `RECOVERY_VERIFICATION_FAILURE`).
+  Enforce **Duplicate Incident Suppression**: if an incident is active for `(workspace_id, service_id)`, new failures escalate severity and append chronological timeline events rather than spawning duplicate tickets.
+  Enforce **Explainable Diagnosis**: every diagnosis record links concrete evidence observations and rule names to the hypothesis. When evidence is insufficient or nominal, the system returns `RULE_INSUFFICIENT_EVIDENCE` and flags `MANUAL_INVESTIGATION` rather than inventing speculative causes.
+- **Consequences:**
+  - *Positive:* Zero alert fatigue, single cohesive incident timeline per failure cycle, clear auditable evidence for SREs, automatic resolution when health is restored.
+  - *Trade-offs:* Multi-service cascading correlation requires explicit dependency graph traversals in advanced tiers.

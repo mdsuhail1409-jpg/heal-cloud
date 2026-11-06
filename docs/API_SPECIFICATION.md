@@ -116,101 +116,130 @@ Generic webhook receiver supporting Prometheus Alertmanager, Datadog, AWS CloudW
 
 ### 3.3 Incidents & Diagnostics (RCA)
 
-#### `GET /api/v1/incidents`
-Lists all active or historic incidents with filtering and pagination.
+All incident endpoints are tenant-scoped under an organization and workspace to enforce strict isolation.
+
+#### `GET /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents`
+Lists all active or historic incidents within a workspace with filtering and pagination.
 
 - **Query Parameters:**
-  - `status`: Filter by status (`DETECTED`, `DIAGNOSING`, `AWAITING_APPROVAL`, `REMEDIATING`, `RESOLVED`, `FAILED`)
-  - `severity`: Filter by severity (`P1_CRITICAL`, `P2_HIGH`, `P3_MEDIUM`)
+  - `status`: Filter by status (`OPEN`, `ACKNOWLEDGED`, `INVESTIGATING`, `RECOVERY_PENDING`, `RECOVERING`, `RESOLVED`, `CLOSED`, `FAILED`)
+  - `severity`: Filter by severity (`P1_CRITICAL`, `P2_HIGH`, `P3_MEDIUM`, `P4_LOW`)
+  - `service_id`: Filter by target service UUID
   - `page`: Page number (default: 1)
-  - `limit`: Items per page (default: 20, max: 100)
+  - `size`: Items per page (default: 20, max: 100)
 
 - **Response (`200 OK`):**
 ```json
 {
-  "data": [
+  "items": [
     {
       "id": "e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
-      "incident_number": "INC-2026-1049",
-      "title": "Severe Memory Saturation & OOMKill risk in checkout-api",
+      "organization_id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "workspace_id": "c1f7a049-74d6-444a-9db1-30ef48e83311",
+      "service_id": "srv-prod-checkout",
+      "incident_number": "INC-2026-0001",
+      "title": "Service Unavailable: checkout-api unreachable or HTTP 503",
+      "description": "Automated incident triggered by RULE_SERVICE_UNAVAILABLE.",
       "severity": "P1_CRITICAL",
-      "status": "AWAITING_APPROVAL",
-      "service": {
-        "id": "srv-prod-checkout",
-        "name": "checkout-api",
-        "environment": "production"
-      },
-      "rca_confidence": 0.94,
-      "triggered_at": "2026-11-06T12:31:00Z"
+      "status": "OPEN",
+      "assigned_to_user_id": null,
+      "detected_at": "2026-11-06T12:31:00Z",
+      "acknowledged_at": null,
+      "resolved_at": null,
+      "created_at": "2026-11-06T12:31:00Z",
+      "updated_at": "2026-11-06T12:31:00Z",
+      "service_name": "checkout-api",
+      "events": [
+        {
+          "id": "evt-01",
+          "incident_id": "e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
+          "event_type": "DETECTED",
+          "message": "Incident detected by rule RULE_SERVICE_UNAVAILABLE: Service Unavailable: checkout-api unreachable",
+          "payload": {"status_code": 503, "consecutive_failures": 3},
+          "created_at": "2026-11-06T12:31:00Z"
+        }
+      ],
+      "diagnoses": [
+        {
+          "id": "diag-01",
+          "incident_id": "e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
+          "rule_name": "RULE_SERVICE_UNAVAILABLE",
+          "root_cause_hypothesis": "Target endpoint is unreachable or returning server errors (HTTP 503). Process crash or port unresponsiveness likely.",
+          "confidence_score": 0.85,
+          "evidence": {"status_code": 503, "response_time_ms": 120.0},
+          "recommended_action": "SIMULATE_RESTART",
+          "created_at": "2026-11-06T12:31:00Z"
+        }
+      ]
     }
   ],
-  "pagination": {
-    "total_count": 1,
-    "page": 1,
-    "limit": 20,
-    "total_pages": 1
-  }
+  "total": 1,
+  "page": 1,
+  "size": 20
 }
 ```
 
-#### `GET /api/v1/incidents/{id}`
-Retrieves full incident dossier including evidence, correlated traces, and recommended playbook.
-
-- **Response (`200 OK`):**
-```json
-{
-  "id": "e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
-  "incident_number": "INC-2026-1049",
-  "title": "Severe Memory Saturation & OOMKill risk in checkout-api",
-  "severity": "P1_CRITICAL",
-  "status": "AWAITING_APPROVAL",
-  "root_cause_summary": "Heap memory leak detected following canary release v2.14.0. Working set memory exceeded 92% of pod limit (1024MiB).",
-  "rca_confidence": 0.94,
-  "evidence": [
-    {
-      "type": "metric_threshold_breach",
-      "metric": "container_memory_working_set_bytes",
-      "threshold": 950000000,
-      "observed": 1024000000
-    },
-    {
-      "type": "log_pattern",
-      "pattern": "java.lang.OutOfMemoryError: Java heap space",
-      "occurrence_count": 18
-    }
-  ],
-  "recommended_playbook": {
-    "id": "pb-k8s-rollback-canary",
-    "name": "Canary Rollback & Memory Limit Boost",
-    "risk_tier": "TIER_3_HIGH",
-    "requires_hitl": true
-  }
-}
-```
-
-#### `POST /api/v1/incidents/{id}/remediate`
-Manually or programmatically triggers an automated remediation execution.
+#### `POST /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents`
+Manually opens an incident within a workspace. Requires `RELIABILITY_ENGINEER` role or higher.
 
 - **Request:**
 ```json
 {
-  "playbook_id": "pb-k8s-rollback-canary",
-  "override_parameters": {
-    "target_revision": "v2.13.9",
-    "drain_grace_period_sec": 30
-  }
+  "service_id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+  "title": "Severe Database Connection Pool Exhaustion",
+  "description": "Active connection pool utilization exceeded 98% with thread timeouts.",
+  "severity": "P2_HIGH"
 }
 ```
 
-- **Response (`202 Accepted`):**
+- **Response (`201 Created`):** Returns full `IncidentResponse` object with initial `DETECTED` event and explainable diagnosis.
+
+#### `GET /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}`
+Retrieves full incident dossier including service metadata, chronological event log, and root cause diagnostic history.
+
+#### `POST /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}/acknowledge`
+Acknowledges an open incident, setting status to `ACKNOWLEDGED` and recording operator identity and timestamp. Requires `RELIABILITY_ENGINEER` or higher.
+
+- **Request:**
 ```json
 {
-  "remediation_run_id": "run-f9821034-77a4-44cf",
-  "incident_id": "e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
-  "status": "QUEUED",
-  "estimated_duration_sec": 45
+  "note": "Investigating upstream dependency failure"
 }
 ```
+
+#### `POST /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}/assign`
+Assigns an incident to an engineer. Requires `RELIABILITY_ENGINEER` or higher.
+
+- **Request:**
+```json
+{
+  "assigned_to_user_id": "c1f7a049-74d6-444a-9db1-30ef48e83311"
+}
+```
+
+#### `PATCH /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}/status`
+Updates incident status or severity, validating legal state transitions (e.g. `CLOSED` can only transition to `OPEN`). Requires `RELIABILITY_ENGINEER` or higher.
+
+- **Request:**
+```json
+{
+  "status": "INVESTIGATING",
+  "severity": "P1_CRITICAL"
+}
+```
+
+#### `POST /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}/diagnose`
+Runs an on-demand explainable root-cause diagnosis evaluation. Never invents a cause when evidence is insufficient (returns `RULE_INSUFFICIENT_EVIDENCE` and recommends `MANUAL_INVESTIGATION`). Requires `RELIABILITY_ENGINEER` or higher.
+
+- **Request:**
+```json
+{
+  "force_re_evaluation": true
+}
+```
+
+#### `POST /api/v1/organizations/{org_id}/workspaces/{workspace_id}/incidents/{incident_id}/remediate`
+Manually or programmatically triggers an automated recovery execution under allowlisted policy guardrails. (Implemented in Phase 8).
 
 ---
 
