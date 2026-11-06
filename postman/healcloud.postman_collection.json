@@ -1,0 +1,221 @@
+{
+  "info": {
+    "_postman_id": "7d9b23f8-3e11-4cb5-b44e-0129a738bf54",
+    "name": "HealCloud Platform API v1",
+    "description": "Postman API Collection for HealCloud - Intelligent Cloud Reliability & Self-Healing Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set('bearerToken', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sarah.sre@acme-cloud.io\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telemetry Ingestion",
+      "item": [
+        {
+          "name": "Ingest Telemetry Events",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"events\": [\n    {\n      \"timestamp\": \"2026-11-06T12:30:15Z\",\n      \"service_id\": \"srv-prod-checkout\",\n      \"event_type\": \"metric_anomaly\",\n      \"severity\": \"CRITICAL\",\n      \"metric_name\": \"container_memory_working_set_bytes\",\n      \"metric_value\": 1048576000.0,\n      \"tags\": {\n        \"namespace\": \"production\",\n        \"pod\": \"checkout-api-79b8c645b-x7zpq\",\n        \"node\": \"ip-10-0-14-22.ec2.internal\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/telemetry/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["telemetry", "events"]
+            }
+          }
+        },
+        {
+          "name": "Prometheus Alert Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": \"4\",\n  \"groupKey\": \"{}:{alertname=\\\"ContainerMemoryHigh\\\"}\",\n  \"status\": \"firing\",\n  \"alerts\": [\n    {\n      \"status\": \"firing\",\n      \"labels\": {\n        \"alertname\": \"ContainerMemoryHigh\",\n        \"severity\": \"critical\",\n        \"namespace\": \"production\",\n        \"pod\": \"checkout-api-79b8c645b-x7zpq\"\n      },\n      \"annotations\": {\n        \"summary\": \"Container memory exceeding 90% quota\"\n      },\n      \"startsAt\": \"2026-11-06T12:30:00Z\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhooks/prometheus",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhooks", "prometheus"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incidents & Diagnostics",
+      "item": [
+        {
+          "name": "List Active Incidents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents?status=AWAITING_APPROVAL&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["incidents"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "AWAITING_APPROVAL"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Incident Dossier & RCA",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/incidents/e4a2c071-8bc9-4b47-9877-2e2e9cba0012",
+              "host": ["{{baseUrl}}"],
+              "path": ["incidents", "e4a2c071-8bc9-4b47-9877-2e2e9cba0012"]
+            }
+          }
+        },
+        {
+          "name": "Trigger Incident Remediation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playbook_id\": \"pb-k8s-rollback-canary\",\n  \"override_parameters\": {\n    \"target_revision\": \"v2.13.9\",\n    \"drain_grace_period_sec\": 30\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents/e4a2c071-8bc9-4b47-9877-2e2e9cba0012/remediate",
+              "host": ["{{baseUrl}}"],
+              "path": ["incidents", "e4a2c071-8bc9-4b47-9877-2e2e9cba0012", "remediate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Remediation Approvals (HITL)",
+      "item": [
+        {
+          "name": "Approve Remediation Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approval_notes\": \"Reviewed heap metrics. Approved rollback to v2.13.9.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/remediations/run-f9821034-77a4-44cf/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["remediations", "run-f9821034-77a4-44cf", "approve"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
