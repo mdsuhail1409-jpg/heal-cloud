@@ -181,3 +181,4 @@ class Diagnosis(Base, UUIDMixin):
     )
 
     incident: Mapped["Incident"] = relationship("Incident", back_populates="diagnoses")
+

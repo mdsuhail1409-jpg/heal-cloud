@@ -382,3 +382,4 @@ def trigger_diagnosis(
     db.refresh(diagnosis)
 
     return DiagnosisResponse.model_validate(diagnosis)
+
