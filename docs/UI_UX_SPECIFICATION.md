@@ -148,3 +148,4 @@ In high-pressure situations, full keyboard navigation enables sub-second inciden
 - **Color Contrast:** Conforms to **WCAG 2.1 AA** (minimum 4.5:1 contrast ratio for text and status tokens).
 - **Latency Budget:** First Contentful Paint (FCP) $< 0.8\text{s}$, Time to Interactive (TTI) $< 1.5\text{s}$.
 - **WebSocket Reconnection:** Automatic exponential backoff reconnection with an offline status banner if network connectivity drops.
+

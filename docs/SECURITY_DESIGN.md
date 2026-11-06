@@ -108,3 +108,4 @@ To guarantee that self-healing automation cannot create cascading outages or fla
 - **Compliance Coverage:**
   - **SOC 2 Type II:** CC6.1 (Logical Access), CC6.8 (Unauthorized Changes Prevention), CC7.2 (Security Incident Monitoring).
   - **ISO/IEC 27001:2022:** Control A.8.15 (Logging), Control A.8.18 (Privileged Access Rights).
+

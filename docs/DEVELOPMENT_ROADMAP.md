@@ -102,3 +102,4 @@ The HealCloud engineering roadmap is structured across six progressive delivery 
 | **Ingestion Pipeline Overload** | High | Redis Streams backpressure buffering; stateless horizontal auto-scaling on ingestion pods. |
 | **Cloud IAM Privilege Escalation** | Critical | Strict STS assume-role policies with temporary 15-minute sessions and external ID verification. |
 | **False-Positive Auto-Remediations** | Medium | Mandatory human approval (HITL) for any action categorized as Tier 3 or affecting persistent data. |
+

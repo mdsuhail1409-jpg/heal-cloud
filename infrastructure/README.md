@@ -27,3 +27,4 @@ docker compose -f docker/docker-compose.dev.yml up -d
 Starts:
 - **PostgreSQL 16 with TimescaleDB:** Port 5432
 - **Redis 7:** Port 6379
+

@@ -2,93 +2,89 @@
 
 | **Document Title** | HealCloud Architectural Decision Records (ADR 001–006) |
 | :--- | :--- |
-| **Document Version** | 1.0.0 |
+| **Document Version** | 2.0.0 (Master Plan Aligned) |
 | **Status** | Active |
 
 ---
 
-## ADR-001: Monorepo Architecture for HealCloud Codebase
+## ADR-001: Modular Monolith Architecture with Separated Background Workers
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  HealCloud consists of multiple interconnected subsystems: the telemetry ingestion backend, an asynchronous remediation worker engine, an SRE web dashboard, infrastructure IaC configurations, tests, and documentation. We evaluated whether to split these into distinct repositories or unify them under a single monorepo.
+  HealCloud must support multiple operational domains (auth, tenancy, service inventory, active monitoring, incident detection, rule-based diagnosis, recovery policies, simulator, and audit logging). Microservices introduce operational complexity, network latency, distributed transactions, and deployment overhead not suitable for an initial SaaS MVP.
 - **Decision:**
-  Adopt a structured monorepo containing `backend/`, `worker/`, `frontend/`, `infrastructure/`, `tests/`, `postman/`, and `docs/`.
+  Implement a **Modular Monolith** using FastAPI in Python, paired with independently running Celery/Redis background worker processes.
 - **Consequences:**
-  - *Positive:* Atomic commits across API schemas and frontend consumers; unified CI/CD pipelines; shared documentation and data models; simplified developer onboarding.
-  - *Trade-offs:* Requires robust path-based CI filtering so frontend changes do not re-run backend test pipelines.
+  - *Positive:* High cohesion, explicit domain boundaries, simple local development, unified transactions where needed, and low latency between modules.
+  - *Trade-offs:* Requires discipline in code boundaries to prevent circular dependencies between modules.
 
 ---
 
-## ADR-002: Python FastAPI for Core Backend & Ingestion API
+## ADR-002: Cloud-Agnostic Core with Provider Adapters
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  The core API must handle high-throughput telemetry ingestion, interface with cloud provider SDKs (Boto3, Kubernetes Python client, Google Cloud SDK), and perform data analysis for anomaly detection. We considered Go, Node.js (TypeScript), and Python.
+  Many reliability tools become tightly coupled to specific cloud providers (e.g. AWS-only CloudWatch or Kubernetes-only controllers). HealCloud is a cloud-agnostic SaaS product that must operate across any infrastructure without requiring any single cloud provider as a prerequisite.
 - **Decision:**
-  Select Python 3.11+ with **FastAPI** running under Uvicorn/Gunicorn.
+  Keep the core platform cloud-agnostic. Target services are registered via generic network/HTTP endpoints and abstracted health definitions. Any future cloud provider integrations (AWS, Azure, GCP, Kubernetes) must reside in isolated provider adapters.
 - **Consequences:**
-  - *Positive:* Native support for asynchronous I/O (`async`/`await`); direct access to Python's rich data science and ML ecosystem (NumPy, Scikit-learn, PyTorch, LangChain); first-class SDK support from all major cloud providers; automatic OpenAPI 3.0 interactive documentation.
-  - *Trade-offs:* Raw CPU-bound ingestion throughput is slightly lower than compiled Go; mitigated by offloading event streams to Redis and using C-optimized libraries (uvloop, orjson).
+  - *Positive:* Broad market applicability, zero cloud vendor lock-in, runnable on local Docker, Render, Vercel, or on-premise.
+  - *Trade-offs:* Cloud-specific advanced actions must be mapped through generic adapter interfaces.
 
 ---
 
-## ADR-003: Distributed Task Orchestration with Redis & Celery
+## ADR-003: Safe Recovery Simulator for MVP
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  Remediation workflows require decoupled, reliable background execution outside the HTTP request/response cycle. Actions must be queued, retried with exponential backoff, rate-limited, and protected by distributed locks.
+  Allowing automated software or AI agents to issue arbitrary, uncontrolled terminal or cloud API commands against live infrastructure poses catastrophic availability and security risks.
 - **Decision:**
-  Deploy **Celery** with **Redis** as both the message broker and result backend, with an architecture designed to support a gradual migration to **Temporal** for multi-step durable orchestrations in Phase 5.
+  For the initial MVP, recovery actions are executed strictly through an isolated **Safe Recovery Simulator** against explicitly registered test services. No arbitrary terminal commands, unrestricted shell access, or unverified infrastructure modifications are permitted.
 - **Consequences:**
-  - *Positive:* Proven stability in production environments; native Python integration; rich support for task routing, retries, and rate limits; Redis delivers sub-millisecond dispatch latencies.
-  - *Trade-offs:* Celery lacks native durable workflow state machines for long pauses; addressed by maintaining workflow state in PostgreSQL.
+  - *Positive:* Guarantees zero risk of accidental infrastructure destruction; enables full deterministic testing of detection, approval, recovery, and verification lifecycles.
+  - *Trade-offs:* Real cloud infrastructure changes are deferred until adapter sandboxes and verification engines are fully hardened in post-MVP phases.
 
 ---
 
-## ADR-004: Hybrid Storage Model (PostgreSQL + TimescaleDB + Redis)
+## ADR-004: React + Vite + TypeScript for Frontend Console
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  HealCloud manages two distinct data access patterns: relational, transactional data (users, organizations, playbooks, incidents, audit records) and high-velocity time-series telemetry (metrics, alerts, traces).
+  The frontend console requires fast page loads, rapid feedback loops, type safety, and real-time state management for SRE workflows.
 - **Decision:**
-  Implement a unified PostgreSQL 16 datastore enhanced with the **TimescaleDB** extension for time-series hypertables, complemented by **Redis 7** for ephemeral caching and distributed locks.
+  Build the frontend with **React, TypeScript, Vite, Tailwind CSS, React Router, and TanStack Query**.
 - **Consequences:**
-  - *Positive:* Avoids the operational overhead of running separate relational and NoSQL/time-series database clusters (e.g., Cassandra or InfluxDB); allows unified SQL joins between telemetry events and incident metadata; TimescaleDB provides automated 1-day chunking and zstd compression.
-  - *Trade-offs:* Requires the TimescaleDB extension in PostgreSQL containers; requires managed PostgreSQL instances that support custom extensions in cloud deployments.
+  - *Positive:* Sub-second Hot Module Replacement (HMR) with Vite; clean SPA deployment to static CDNs (Vercel); strong type guarantees shared with backend OpenAPI specifications; robust caching and refetching via TanStack Query.
+  - *Trade-offs:* Client-side rendering requires proper loading skeletons and optimistic UI patterns.
 
 ---
 
-## ADR-005: Next.js 14 App Router for SRE Operational Console
+## ADR-005: PostgreSQL Relational Database with Multi-Tenant Scoping
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  The frontend console must provide real-time updates during incidents, load instantly under high-stress conditions, and render complex topology maps and telemetry graphs. We evaluated single-page Vite/React, Remix, and Next.js.
+  HealCloud is a multi-tenant SaaS requiring strict data isolation, foreign key referential integrity, and reliable transactions across 16 core entities.
 - **Decision:**
-  Build the frontend console using **Next.js 14 (App Router)** with React, Tailwind CSS, TanStack Query, and Lucide Icons.
+  Standardize on **PostgreSQL 16** with SQLAlchemy 2.0 ORM and Alembic migrations. Enforce multi-tenancy at the data-access layer by always scoping queries to `organization_id` and `workspace_id`.
 - **Consequences:**
-  - *Positive:* Fast initial page loads via Server Components; unified TypeScript types with backend OpenAPI generators; built-in routing and layout persistence; effortless integration with WebSocket clients.
-  - *Trade-offs:* Need to separate client components (`"use client"`) for real-time WebSocket listeners and interactive Canvas/SVG topology graphs.
+  - *Positive:* Rock-solid ACID guarantees, rich JSONB support for flexible metadata and event payloads, excellent index performance.
+  - *Trade-offs:* Tenant filtering must be rigorously enforced and verified with automated cross-tenant security tests.
 
 ---
 
-## ADR-006: Multi-Layer Guardrail Architecture for Automated Remediation
+## ADR-006: Celery + Redis Background Task Processing
 
 - **Status:** Accepted
 - **Date:** 2026-11-06
 - **Context:**
-  Automated cloud remediations introduce the danger of "automation runaway" (e.g., an automated reboot loop that crashes an entire cluster, or cascading restarts that exhaust cloud quotas).
+  Health checks, metric collection, and recovery simulations cannot block the web request loop. They must be executed on configurable schedules with timeouts and retry limits.
 - **Decision:**
-  Enforce a non-bypassable, multi-tier Guardrail Engine embedded in the execution pipeline:
-  1. *Resource-level cooldowns (anti-flapping):* 300s minimum between actions on the same resource.
-  2. *Cluster concurrency caps:* Max 2 concurrent automated remediations per cluster.
-  3. *Circuit breaker:* 2 consecutive failures immediately lock the service into `MANUAL_ONLY` mode.
-  4. *Risk classification:* Tier 1 (safe/read-only) runs automatically; Tier 3 (destructive) strictly requires Human-in-the-Loop (HITL) dual-custody authorization.
+  Deploy **Celery** with **Redis** as the task broker and distributed mutex lock provider.
 - **Consequences:**
-  - *Positive:* Eliminates risk of catastrophic cascading failures; establishes confidence with enterprise security and operations leadership.
-  - *Trade-offs:* Slightly increases resolution time for high-risk incidents due to manual approval delays, which is an intentional safety compromise.
+  - *Positive:* Asynchronous execution, horizontal worker scalability, distributed locking (`redlock`) preventing duplicate executions on the same service.
+  - *Trade-offs:* Requires running and monitoring separate worker processes alongside the web API.

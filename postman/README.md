@@ -15,3 +15,4 @@ This directory provides exportable Postman collections and environment variables
 3. Select `healcloud.postman_collection.json`.
 4. Configure collection variables (`baseUrl` set to `http://localhost:8000/api/v1`).
 5. Execute the `Login` request to automatically populate the `bearerToken` environment variable.
+
