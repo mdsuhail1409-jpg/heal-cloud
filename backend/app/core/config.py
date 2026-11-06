@@ -17,8 +17,14 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 
-    # Security
+    # Security & Tokens
     SECRET_KEY: str = "dev-insecure-secret-key-change-before-production-deployment-32ch"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    
+    # Rate Limiting & Brute-Force Guardrails
+    RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
+    RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = 300
 
     # Database Configuration
     DATABASE_URL: str = "sqlite:///./healcloud_dev.db"

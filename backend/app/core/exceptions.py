@@ -105,6 +105,18 @@ class ConflictException(HealCloudException):
         )
 
 
+class RateLimitException(HealCloudException):
+    """Too many requests / rate limit breached."""
+
+    def __init__(self, message: str = "Too many requests. Please slow down and try again later."):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            title="Too Many Requests",
+            error_type="https://errors.healcloud.io/rate_limited",
+        )
+
+
 def _build_problem_details(
     status_code: int,
     title: str,
