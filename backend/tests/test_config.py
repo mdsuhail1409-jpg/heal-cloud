@@ -45,3 +45,4 @@ def test_environment_helpers():
     )
     assert prod_config.is_production is True
     assert prod_config.is_sqlite is False
+

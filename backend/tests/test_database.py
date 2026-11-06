@@ -61,3 +61,4 @@ def test_get_db_generator():
         next(gen)
     except StopIteration:
         pass
+

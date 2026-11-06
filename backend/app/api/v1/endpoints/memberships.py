@@ -220,3 +220,4 @@ def remove_membership(
         "message": f"User '{membership.user.email}' removed from organization.",
         "membership_id": str(membership_id),
     }
+

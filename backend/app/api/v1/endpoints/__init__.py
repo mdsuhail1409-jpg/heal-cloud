@@ -1,3 +1,19 @@
-from app.api.v1.endpoints import health, auth, organizations, workspaces, memberships
+from app.api.v1.endpoints import (
+    health,
+    auth,
+    organizations,
+    workspaces,
+    memberships,
+    services,
+    metrics,
+)
 
-__all__ = ["health", "auth", "organizations", "workspaces", "memberships"]
+__all__ = [
+    "health",
+    "auth",
+    "organizations",
+    "workspaces",
+    "memberships",
+    "services",
+    "metrics",
+]

@@ -56,3 +56,4 @@ def setup_logging(log_level: str = "INFO", json_logs: bool = False) -> None:
 
 
 logger = logging.getLogger("healcloud")
+

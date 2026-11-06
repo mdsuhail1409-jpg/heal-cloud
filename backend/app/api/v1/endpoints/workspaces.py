@@ -177,3 +177,4 @@ def delete_workspace(
         "message": f"Workspace '{ws.name}' deleted successfully.",
         "workspace_id": str(workspace_id),
     }
+

@@ -117,3 +117,4 @@ def reset_login_failures(key: str) -> None:
     """Reset failed login attempts upon successful authentication."""
     if key in _login_attempt_history:
         del _login_attempt_history[key]
+

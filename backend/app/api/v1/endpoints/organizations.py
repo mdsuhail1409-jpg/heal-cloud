@@ -205,3 +205,4 @@ def delete_organization(
     org.is_active = False
     db.add(org)
     return {"message": f"Organization '{org.name}' has been deactivated.", "organization_id": str(org.id)}
+

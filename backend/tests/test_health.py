@@ -71,3 +71,4 @@ def test_openapi_json(client):
     assert "/api/v1/health/live" in schema["paths"]
     assert "/api/v1/health/ready" in schema["paths"]
     assert "/api/v1/health/info" in schema["paths"]
+

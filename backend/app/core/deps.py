@@ -143,3 +143,4 @@ def require_role(min_role: RoleEnum) -> Callable[[TenantContext], TenantContext]
         return tenant_ctx
 
     return role_checker
+

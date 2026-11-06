@@ -21,6 +21,17 @@ from app.schemas.membership import (
     MembershipUpdate,
     MembershipRead,
 )
+from app.schemas.service import (
+    ServiceCreate,
+    ServiceUpdate,
+    ServiceRead,
+    ServiceEndpointCreate,
+    ServiceEndpointRead,
+    MonitoringCheckCreate,
+    MonitoringCheckRead,
+    MetricSampleRead,
+    HealthCheckResult,
+)
 
 __all__ = [
     "UserCreate",
@@ -41,4 +52,13 @@ __all__ = [
     "MembershipCreate",
     "MembershipUpdate",
     "MembershipRead",
+    "ServiceCreate",
+    "ServiceUpdate",
+    "ServiceRead",
+    "ServiceEndpointCreate",
+    "ServiceEndpointRead",
+    "MonitoringCheckCreate",
+    "MonitoringCheckRead",
+    "MetricSampleRead",
+    "HealthCheckResult",
 ]

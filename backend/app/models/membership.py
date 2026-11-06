@@ -72,3 +72,4 @@ class Membership(Base, UUIDMixin):
 
     def __repr__(self) -> str:
         return f"<Membership(org_id={self.organization_id}, user_id={self.user_id}, role='{self.role}')>"
+

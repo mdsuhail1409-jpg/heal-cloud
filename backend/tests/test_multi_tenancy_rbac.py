@@ -182,3 +182,4 @@ def test_rbac_member_management_restrictions(client):
     )
     assert demote_sole_owner.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "Cannot demote the sole Organization Owner" in demote_sole_owner.json()["detail"]
+

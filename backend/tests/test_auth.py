@@ -212,3 +212,4 @@ def test_change_password(client):
         "password": "NewSecurePassword456!",
     })
     assert new_login.status_code == status.HTTP_200_OK
+

@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     RATE_LIMIT_LOGIN_ATTEMPTS: int = 5
     RATE_LIMIT_LOGIN_WINDOW_SECONDS: int = 300
 
+    # SSRF & Monitoring Target Guardrails
+    ALLOW_LOCAL_TARGETS: bool = False
+    DEFAULT_HEALTH_CHECK_TIMEOUT_MS: int = 5000
+    MAX_HEALTH_CHECK_TIMEOUT_MS: int = 30000
+    MIN_HEALTH_CHECK_INTERVAL_SEC: int = 5
+
     # Database Configuration
     DATABASE_URL: str = "sqlite:///./healcloud_dev.db"
     DATABASE_POOL_SIZE: int = 10

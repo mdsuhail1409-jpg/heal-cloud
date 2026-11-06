@@ -79,3 +79,4 @@ def check_db_health() -> dict:
     except Exception as exc:
         logger.error(f"Database readiness probe failed: {exc}")
         raise DatabaseConnectionException(f"Database probe failed: {str(exc)}")
+

@@ -78,3 +78,4 @@ def app_info() -> AppInfoResponse:
         api_prefix=settings.API_V1_STR,
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
+

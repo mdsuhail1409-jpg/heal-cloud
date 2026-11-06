@@ -55,3 +55,4 @@ class Workspace(Base, UUIDMixin, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<Workspace(id={self.id}, org_id={self.organization_id}, slug='{self.slug}')>"
+

@@ -248,3 +248,4 @@ def change_password(
     db.add(current_user)
 
     return {"message": "Password changed successfully."}
+

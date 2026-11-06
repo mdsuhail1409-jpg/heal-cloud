@@ -49,3 +49,4 @@ class UserMembershipInfo(BaseModel):
 class UserProfileResponse(BaseModel):
     user: UserRead
     memberships: List[UserMembershipInfo]
+

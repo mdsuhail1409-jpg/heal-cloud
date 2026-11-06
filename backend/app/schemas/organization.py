@@ -47,3 +47,4 @@ class OrganizationRead(BaseModel):
     user_role: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
