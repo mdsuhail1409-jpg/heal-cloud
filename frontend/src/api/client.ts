@@ -176,9 +176,19 @@ class ApiClient {
     orgId: string,
     wsId: string,
     serviceId: string
-  ): Promise<{ message: string; sample: MetricSample }> {
+  ): Promise<{
+    service_id: string
+    service_name: string
+    health_status: string
+    status_code: number | null
+    response_time_ms: number
+    consecutive_failures: number
+    is_successful: boolean
+    error_message: string | null
+    checked_at: string
+  }> {
     return this.request(
-      `/organizations/${orgId}/workspaces/${wsId}/services/${serviceId}/check`,
+      `/organizations/${orgId}/workspaces/${wsId}/services/${serviceId}/checks/run`,
       { method: 'POST' }
     )
   }
@@ -190,7 +200,7 @@ class ApiClient {
     limit = 50
   ): Promise<MetricSample[]> {
     return this.request(
-      `/organizations/${orgId}/workspaces/${wsId}/services/${serviceId}/samples?limit=${limit}`
+      `/organizations/${orgId}/workspaces/${wsId}/services/${serviceId}/metrics?limit=${limit}`
     )
   }
 
@@ -286,75 +296,98 @@ class ApiClient {
     )
   }
 
-  // --- Recovery Policies, Approvals & Audit API (With Demo Fallbacks) ---
+  // --- Recovery Policies, Approvals & Controlled Simulator API ---
   async listRecoveryPolicies(orgId: string, wsId: string): Promise<RecoveryPolicy[]> {
-    try {
-      return await this.request<RecoveryPolicy[]>(
-        `/organizations/${orgId}/workspaces/${wsId}/recovery-policies`
-      )
-    } catch {
-      // Demonstration Data clearly labeled
-      return DEMO_RECOVERY_POLICIES
+    return this.request<RecoveryPolicy[]>(
+      `/organizations/${orgId}/workspaces/${wsId}/recovery-policies`
+    )
+  }
+
+  async createRecoveryPolicy(
+    orgId: string,
+    wsId: string,
+    data: {
+      name: string
+      trigger_condition: string
+      action: string
+      requires_approval: boolean
+      max_retries?: number
+      cooldown_seconds?: number
+      timeout_seconds?: number
+      service_id?: string
     }
+  ): Promise<RecoveryPolicy> {
+    return this.request<RecoveryPolicy>(
+      `/organizations/${orgId}/workspaces/${wsId}/recovery-policies`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    )
+  }
+
+  async updateRecoveryPolicy(
+    orgId: string,
+    wsId: string,
+    policyId: string,
+    data: Partial<RecoveryPolicy>
+  ): Promise<RecoveryPolicy> {
+    return this.request<RecoveryPolicy>(
+      `/organizations/${orgId}/workspaces/${wsId}/recovery-policies/${policyId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    )
   }
 
   async listApprovalRequests(orgId: string, wsId: string): Promise<ApprovalRequest[]> {
-    try {
-      return await this.request<ApprovalRequest[]>(
-        `/organizations/${orgId}/workspaces/${wsId}/approvals`
-      )
-    } catch {
-      return DEMO_APPROVAL_REQUESTS
-    }
+    return this.request<ApprovalRequest[]>(
+      `/organizations/${orgId}/workspaces/${wsId}/approvals`
+    )
   }
 
   async decideApproval(
-    _orgId: string,
-    _wsId: string,
+    orgId: string,
+    wsId: string,
     approvalId: string,
     decision: 'APPROVED' | 'REJECTED',
     reason?: string
   ): Promise<ApprovalRequest> {
-    const existing = DEMO_APPROVAL_REQUESTS.find((a) => a.id === approvalId)
-    if (existing) {
-      existing.status = decision
-      existing.decided_at = new Date().toISOString()
-      existing.decision_reason = reason
-      return existing
-    }
-    return {
-      id: approvalId,
-      execution_id: 'exec-demo',
-      incident_id: 'inc-demo',
-      incident_number: 'INC-2026-0001',
-      service_name: 'checkout-api',
-      proposed_action: 'SIMULATE_RESTART',
-      risk_tier: 'TIER_3_HIGH',
-      blast_radius: '1 Service (3 Pods)',
-      status: decision,
-      requested_by: 'HealCloud Autonomous Engine',
-      requested_at: new Date().toISOString(),
-      decided_at: new Date().toISOString(),
-      decision_reason: reason,
-    }
+    return this.request<ApprovalRequest>(
+      `/organizations/${orgId}/workspaces/${wsId}/approvals/${approvalId}/decide`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ decision, reason }),
+      }
+    )
   }
 
   async listRecoveryHistory(orgId: string, wsId: string): Promise<RecoveryExecution[]> {
-    try {
-      return await this.request<RecoveryExecution[]>(
-        `/organizations/${orgId}/workspaces/${wsId}/recovery-executions`
-      )
-    } catch {
-      return DEMO_RECOVERY_EXECUTIONS
-    }
+    return this.request<RecoveryExecution[]>(
+      `/organizations/${orgId}/workspaces/${wsId}/recovery-executions`
+    )
   }
 
-  async listAuditLogs(orgId: string): Promise<AuditLog[]> {
-    try {
-      return await this.request<AuditLog[]>(`/organizations/${orgId}/audit-logs`)
-    } catch {
-      return DEMO_AUDIT_LOGS
-    }
+  async executeRemediation(
+    orgId: string,
+    wsId: string,
+    incidentId: string,
+    policyId?: string,
+    action?: string,
+    note?: string
+  ): Promise<RecoveryExecution> {
+    return this.request<RecoveryExecution>(
+      `/organizations/${orgId}/workspaces/${wsId}/incidents/${incidentId}/remediate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ policy_id: policyId, action, note }),
+      }
+    )
+  }
+
+  async listAuditLogs(orgId: string, limit = 100): Promise<AuditLog[]> {
+    return this.request<AuditLog[]>(`/organizations/${orgId}/audit-logs?limit=${limit}`)
   }
 }
 
@@ -502,3 +535,4 @@ export const DEMO_AUDIT_LOGS: AuditLog[] = [
     created_at: '2026-11-06T09:12:00Z',
   },
 ]
+

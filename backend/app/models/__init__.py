@@ -16,6 +16,16 @@ from app.models.incident import (
     IncidentStatusEnum,
     IncidentEventTypeEnum,
 )
+from app.models.recovery import (
+    RecoveryPolicy,
+    RecoveryExecution,
+    ApprovalRequest,
+    AllowlistedActionEnum,
+    RecoveryStatusEnum,
+    ApprovalDecisionEnum,
+    RiskTierEnum,
+)
+from app.models.audit import AuditLog
 
 __all__ = [
     "User",
@@ -34,4 +44,12 @@ __all__ = [
     "IncidentSeverityEnum",
     "IncidentStatusEnum",
     "IncidentEventTypeEnum",
+    "RecoveryPolicy",
+    "RecoveryExecution",
+    "ApprovalRequest",
+    "AllowlistedActionEnum",
+    "RecoveryStatusEnum",
+    "ApprovalDecisionEnum",
+    "RiskTierEnum",
+    "AuditLog",
 ]

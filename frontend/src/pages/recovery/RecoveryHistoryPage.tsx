@@ -5,7 +5,7 @@ import { api } from '@/api/client'
 import { RecoveryExecution } from '@/types'
 import { Table, Column } from '@/components/common/Table'
 import { Badge } from '@/components/common/Badge'
-import { DemoBanner, LoadingState, EmptyState } from '@/components/common/Feedback'
+import { LoadingState, EmptyState } from '@/components/common/Feedback'
 import { formatDateTime, formatDuration } from '@/utils/formatters'
 
 export const RecoveryHistoryPage: React.FC = () => {
@@ -104,8 +104,6 @@ export const RecoveryHistoryPage: React.FC = () => {
         </p>
       </div>
 
-      <DemoBanner featureName="Recovery History Ledger" />
-
       {isLoading ? (
         <LoadingState message="Loading recovery history..." />
       ) : history.length === 0 ? (
@@ -120,3 +118,4 @@ export const RecoveryHistoryPage: React.FC = () => {
     </div>
   )
 }
+

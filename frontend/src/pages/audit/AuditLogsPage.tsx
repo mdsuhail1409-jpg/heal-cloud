@@ -6,7 +6,7 @@ import { AuditLog } from '@/types'
 import { Table, Column } from '@/components/common/Table'
 import { Badge } from '@/components/common/Badge'
 import { Modal } from '@/components/common/Modal'
-import { DemoBanner, LoadingState, EmptyState } from '@/components/common/Feedback'
+import { LoadingState, EmptyState } from '@/components/common/Feedback'
 import { formatDateTime } from '@/utils/formatters'
 
 export const AuditLogsPage: React.FC = () => {
@@ -111,8 +111,6 @@ export const AuditLogsPage: React.FC = () => {
         </div>
       </div>
 
-      <DemoBanner featureName="Immutable Audit Trail" />
-
       {isLoading ? (
         <LoadingState message="Loading audit trail..." />
       ) : filteredLogs.length === 0 ? (
@@ -153,3 +151,4 @@ export const AuditLogsPage: React.FC = () => {
     </div>
   )
 }
+

@@ -30,3 +30,4 @@ describe('Badge Components', () => {
     expect(screen.getByText('Resolved')).toBeInTheDocument()
   })
 })
+

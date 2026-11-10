@@ -22,3 +22,4 @@ describe('MetricKpiCard Component', () => {
     expect(screen.getByText('Verified closed-loop resolution')).toBeInTheDocument()
   })
 })
+

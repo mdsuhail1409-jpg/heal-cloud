@@ -35,6 +35,7 @@ from app.schemas.service import (
     HealthCheckResult,
 )
 from app.services.health_checker import execute_monitoring_check
+from app.services.recovery_simulator import log_audit_event
 
 router = APIRouter(
     prefix="/organizations/{org_id}/workspaces/{workspace_id}/services",
@@ -161,6 +162,16 @@ def register_service(
     db.add(check)
     db.flush()
 
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="SERVICE_REGISTERED",
+        resource_type="Service",
+        resource_id=str(service.id),
+        payload={"name": service.name, "endpoint_url": req.endpoint_url},
+    )
+
     db.refresh(service)
     return ServiceRead.model_validate(service)
 
@@ -220,6 +231,18 @@ def update_service(
         service.description = req.description
 
     db.add(service)
+    db.flush()
+
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="SERVICE_UPDATED",
+        resource_type="Service",
+        resource_id=str(service.id),
+        payload={"name": service.name, "description": service.description},
+    )
+
     return ServiceRead.model_validate(service)
 
 
@@ -239,10 +262,24 @@ def delete_service(
     _get_verified_workspace(org_id, workspace_id, db)
     service = _get_verified_service(org_id, workspace_id, service_id, db)
 
+    service_name = service.name
+    service_id_str = str(service.id)
     db.delete(service)
+    db.flush()
+
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="SERVICE_DELETED",
+        resource_type="Service",
+        resource_id=service_id_str,
+        payload={"name": service_name},
+    )
+
     return {
-        "message": f"Service '{service.name}' deleted successfully.",
-        "service_id": str(service_id),
+        "message": f"Service '{service_name}' deleted successfully.",
+        "service_id": service_id_str,
     }
 
 
@@ -305,6 +342,20 @@ def run_service_health_check(
 
     sample = execute_monitoring_check(check.id, db=db)
     db.refresh(service)
+
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="PROBE_MANUAL_TRIGGERED",
+        resource_type="Service",
+        resource_id=str(service.id),
+        payload={
+            "is_successful": sample.is_successful,
+            "status_code": sample.status_code,
+            "response_time_ms": sample.response_time_ms,
+        },
+    )
 
     return HealthCheckResult(
         service_id=service.id,

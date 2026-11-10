@@ -43,6 +43,16 @@ from app.schemas.incident import (
     IncidentResponse,
     IncidentListResponse,
 )
+from app.schemas.recovery import (
+    RecoveryPolicyCreate,
+    RecoveryPolicyUpdate,
+    RecoveryPolicyResponse,
+    ApprovalDecideRequest,
+    ApprovalRequestResponse,
+    RecoveryExecutionResponse,
+    RemediateTriggerRequest,
+)
+from app.schemas.audit import AuditLogResponse
 
 __all__ = [
     "UserCreate",
@@ -81,4 +91,12 @@ __all__ = [
     "DiagnosisResponse",
     "IncidentResponse",
     "IncidentListResponse",
+    "RecoveryPolicyCreate",
+    "RecoveryPolicyUpdate",
+    "RecoveryPolicyResponse",
+    "ApprovalDecideRequest",
+    "ApprovalRequestResponse",
+    "RecoveryExecutionResponse",
+    "RemediateTriggerRequest",
+    "AuditLogResponse",
 ]

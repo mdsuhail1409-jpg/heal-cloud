@@ -198,12 +198,13 @@ export interface ApprovalRequest {
 export interface RecoveryExecution {
   id: string
   incident_id: string
-  incident_number: string
-  policy_id: string
-  policy_name: string
-  service_name: string
+  incident_number?: string
+  policy_id?: string
+  policy_name?: string
+  service_name?: string
   action_taken: string
   status: 'QUEUED' | 'RUNNING' | 'VERIFYING' | 'SUCCESS' | 'FAILED' | 'ROLLED_BACK'
+  execution_output?: string
   duration_ms?: number
   verification_passed?: boolean
   failure_reason?: string
@@ -232,3 +233,4 @@ export interface ApiError {
   instance?: string
   timestamp?: string
 }
+

@@ -110,3 +110,4 @@ export const IncidentStatusBadge: React.FC<{ status: IncidentStatusEnum | string
       return <Badge variant="neutral" size={size}>{status}</Badge>
   }
 }
+

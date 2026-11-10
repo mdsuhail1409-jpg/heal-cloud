@@ -106,14 +106,31 @@ export const IncidentDetailPage: React.FC = () => {
   }
 
   const handleExecuteRemediation = async () => {
+    if (!currentOrg || !currentWorkspace || !id) return
     setIsExecuting(true)
     try {
-      // Simulate remediation run
-      await new Promise((r) => setTimeout(r, 1200))
-      // Transition incident to RESOLVED or RECOVERING
-      await handleStatusChange('RESOLVED')
+      const action = latestDiagnosis?.recommended_action
+      const res = await api.executeRemediation(
+        currentOrg.id,
+        currentWorkspace.id,
+        id,
+        undefined,
+        action,
+        operatorNote
+      )
+      await loadIncident()
       setIsRemediateModalOpen(false)
-      alert('Remediation action simulated successfully. Service returned to HEALTHY state.')
+      if (res.status === 'QUEUED') {
+        alert(
+          'Remediation queued: Policy requires Human-in-the-Loop (HITL) authorization. An approval request has been created in the Approvals queue.'
+        )
+      } else {
+        alert(
+          `Remediation action '${res.action_taken}' completed with status: ${res.status}. Output: ${res.execution_output}`
+        )
+      }
+    } catch (err: any) {
+      alert(`Remediation execution failed: ${err?.detail || err?.title || 'Unknown error'}`)
     } finally {
       setIsExecuting(false)
     }
@@ -474,3 +491,4 @@ export const IncidentDetailPage: React.FC = () => {
     </div>
   )
 }
+

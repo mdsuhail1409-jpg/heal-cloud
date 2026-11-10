@@ -8,7 +8,7 @@ import { Badge } from '@/components/common/Badge'
 import { Button } from '@/components/common/Button'
 import { Modal } from '@/components/common/Modal'
 import { Textarea } from '@/components/common/Input'
-import { DemoBanner, LoadingState, EmptyState } from '@/components/common/Feedback'
+import { LoadingState, EmptyState } from '@/components/common/Feedback'
 import { formatDateTime } from '@/utils/formatters'
 
 export const ApprovalRequestsPage: React.FC = () => {
@@ -177,8 +177,6 @@ export const ApprovalRequestsPage: React.FC = () => {
         </div>
       </div>
 
-      <DemoBanner featureName="HITL Approval Gate" />
-
       {isLoading ? (
         <LoadingState message="Loading approval requests..." />
       ) : requests.length === 0 ? (
@@ -250,3 +248,4 @@ export const ApprovalRequestsPage: React.FC = () => {
     </div>
   )
 }
+

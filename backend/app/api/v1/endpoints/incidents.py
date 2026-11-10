@@ -43,6 +43,7 @@ from app.services.detection_engine import (
     generate_incident_number,
     run_explainable_diagnosis,
 )
+from app.services.recovery_simulator import log_audit_event
 
 router = APIRouter(
     prefix="/organizations/{org_id}/workspaces/{workspace_id}/incidents",
@@ -204,6 +205,16 @@ def create_incident(
     # Initial explainable diagnosis run
     run_explainable_diagnosis(db, incident.id)
 
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="INCIDENT_DECLARED",
+        resource_type="Incident",
+        resource_id=str(incident.id),
+        payload={"incident_number": incident.incident_number, "title": incident.title},
+    )
+
     db.commit()
     db.refresh(incident)
     return _serialize_incident(incident)
@@ -256,6 +267,17 @@ def acknowledge_incident(
     )
     db.add(event)
     db.add(incident)
+
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="INCIDENT_ACKNOWLEDGED",
+        resource_type="Incident",
+        resource_id=str(incident.id),
+        payload={"incident_number": incident.incident_number, "note": body.note},
+    )
+
     db.commit()
     db.refresh(incident)
 
@@ -295,6 +317,17 @@ def assign_incident(
     )
     db.add(event)
     db.add(incident)
+
+    log_audit_event(
+        db=db,
+        organization_id=org_id,
+        user=tenant_ctx.user,
+        action="INCIDENT_ASSIGNED",
+        resource_type="Incident",
+        resource_id=str(incident.id),
+        payload={"incident_number": incident.incident_number, "assigned_to": str(assignee.id)},
+    )
+
     db.commit()
     db.refresh(incident)
 

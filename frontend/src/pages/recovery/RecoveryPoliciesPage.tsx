@@ -8,7 +8,7 @@ import { Badge } from '@/components/common/Badge'
 import { Button } from '@/components/common/Button'
 import { Modal } from '@/components/common/Modal'
 import { TextInput, Select } from '@/components/common/Input'
-import { DemoBanner, LoadingState } from '@/components/common/Feedback'
+import { LoadingState, EmptyState } from '@/components/common/Feedback'
 
 export const RecoveryPoliciesPage: React.FC = () => {
   const { currentOrg, currentWorkspace } = useAuth()
@@ -40,31 +40,39 @@ export const RecoveryPoliciesPage: React.FC = () => {
     loadPolicies()
   }, [currentOrg, currentWorkspace])
 
-  const handleTogglePolicy = (policyId: string) => {
-    setPolicies(
-      policies.map((p) => (p.id === policyId ? { ...p, is_enabled: !p.is_enabled } : p))
-    )
+  const handleTogglePolicy = async (policyId: string) => {
+    if (!currentOrg || !currentWorkspace) return
+    const policy = policies.find((p) => p.id === policyId)
+    if (!policy) return
+    try {
+      await api.updateRecoveryPolicy(currentOrg.id, currentWorkspace.id, policyId, {
+        is_enabled: !policy.is_enabled,
+      })
+      await loadPolicies()
+    } catch (err: any) {
+      alert(`Failed to update policy: ${err?.detail || err?.title || 'Unknown error'}`)
+    }
   }
 
-  const handleCreatePolicy = (e: React.FormEvent) => {
+  const handleCreatePolicy = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newPolicy: RecoveryPolicy = {
-      id: `pol-${Date.now()}`,
-      organization_id: currentOrg?.id || 'org',
-      workspace_id: currentWorkspace?.id || 'ws',
-      name,
-      trigger_condition: triggerCondition,
-      action,
-      requires_approval: requiresApproval,
-      max_retries: maxRetries,
-      cooldown_seconds: cooldownSeconds,
-      timeout_seconds: 60,
-      is_enabled: true,
-      created_at: new Date().toISOString(),
+    if (!currentOrg || !currentWorkspace) return
+    try {
+      await api.createRecoveryPolicy(currentOrg.id, currentWorkspace.id, {
+        name,
+        trigger_condition: triggerCondition,
+        action,
+        requires_approval: requiresApproval,
+        max_retries: maxRetries,
+        cooldown_seconds: cooldownSeconds,
+        timeout_seconds: 60,
+      })
+      await loadPolicies()
+      setIsModalOpen(false)
+      setName('')
+    } catch (err: any) {
+      alert(`Failed to create policy: ${err?.detail || err?.title || 'Unknown error'}`)
     }
-    setPolicies([newPolicy, ...policies])
-    setIsModalOpen(false)
-    setName('')
   }
 
   const columns: Column<RecoveryPolicy>[] = [
@@ -141,10 +149,15 @@ export const RecoveryPoliciesPage: React.FC = () => {
         </Button>
       </div>
 
-      <DemoBanner featureName="Recovery Policy Simulator" />
-
       {isLoading ? (
         <LoadingState message="Loading recovery policies..." />
+      ) : policies.length === 0 ? (
+        <EmptyState
+          title="No recovery policies configured"
+          description="Define autonomous self-healing rules with allowlisted operations, cooldown limits, and approval gates."
+          actionLabel="Create First Policy"
+          onAction={() => setIsModalOpen(true)}
+        />
       ) : (
         <Table columns={columns} data={policies} keyExtractor={(p) => p.id} />
       )}
@@ -236,3 +249,4 @@ export const RecoveryPoliciesPage: React.FC = () => {
     </div>
   )
 }
+

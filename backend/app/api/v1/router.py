@@ -11,6 +11,8 @@ from app.api.v1.endpoints import (
     memberships,
     services,
     incidents,
+    recovery,
+    audit,
     metrics,
 )
 
@@ -24,4 +26,6 @@ api_v1_router.include_router(workspaces.router)
 api_v1_router.include_router(memberships.router)
 api_v1_router.include_router(services.router)
 api_v1_router.include_router(incidents.router)
+api_v1_router.include_router(recovery.router)
+api_v1_router.include_router(audit.router)
 api_v1_router.include_router(metrics.router)

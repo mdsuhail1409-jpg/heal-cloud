@@ -302,3 +302,4 @@ export const IncidentListPage: React.FC = () => {
     </div>
   )
 }
+

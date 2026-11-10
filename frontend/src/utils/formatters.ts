@@ -42,3 +42,4 @@ export function formatDuration(durationSec?: number | null): string {
   const seconds = durationSec % 60
   return `${minutes}m ${seconds}s`
 }
+

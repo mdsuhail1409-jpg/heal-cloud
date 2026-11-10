@@ -53,3 +53,4 @@ describe('Table Component', () => {
     expect(handleRowClick).toHaveBeenCalledWith(data[0])
   })
 })
+

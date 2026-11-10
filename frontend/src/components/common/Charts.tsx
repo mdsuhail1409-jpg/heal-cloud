@@ -106,3 +106,4 @@ export const LatencyBarChart: React.FC<LatencyBarChartProps> = ({
     </div>
   )
 }
+

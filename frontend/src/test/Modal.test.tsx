@@ -45,3 +45,4 @@ describe('Modal Component', () => {
     expect(handleClose).toHaveBeenCalledTimes(1)
   })
 })
+
