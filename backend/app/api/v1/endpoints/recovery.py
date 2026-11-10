@@ -6,7 +6,7 @@ import uuid
 from typing import List, Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 
 from app.core.exceptions import (
@@ -70,6 +70,7 @@ def list_recovery_policies(
     _get_verified_workspace(org_id, workspace_id, db)
     policies = (
         db.query(RecoveryPolicy)
+        .options(joinedload(RecoveryPolicy.service))
         .filter(
             RecoveryPolicy.organization_id == org_id,
             RecoveryPolicy.workspace_id == workspace_id,
@@ -241,6 +242,12 @@ def list_approval_requests(
     _get_verified_workspace(org_id, workspace_id, db)
     approvals = (
         db.query(ApprovalRequest)
+        .options(
+            joinedload(ApprovalRequest.incident),
+            joinedload(ApprovalRequest.service),
+            joinedload(ApprovalRequest.requested_by),
+            joinedload(ApprovalRequest.decided_by),
+        )
         .filter(
             ApprovalRequest.organization_id == org_id,
             ApprovalRequest.workspace_id == workspace_id,
@@ -362,6 +369,11 @@ def list_recovery_executions(
     _get_verified_workspace(org_id, workspace_id, db)
     executions = (
         db.query(RecoveryExecution)
+        .options(
+            joinedload(RecoveryExecution.incident),
+            joinedload(RecoveryExecution.policy),
+            joinedload(RecoveryExecution.service),
+        )
         .filter(
             RecoveryExecution.organization_id == org_id,
             RecoveryExecution.workspace_id == workspace_id,
