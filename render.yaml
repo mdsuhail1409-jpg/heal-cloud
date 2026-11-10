@@ -78,3 +78,4 @@ databases:
     databaseName: healcloud_db
     user: healcloud
     postgresMajorVersion: 16
+
