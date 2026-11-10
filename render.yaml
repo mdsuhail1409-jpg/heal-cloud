@@ -1,0 +1,80 @@
+# Render Infrastructure as Code Blueprint for HealCloud
+# https://render.com/docs/blueprint-spec
+
+services:
+  # 1. FastAPI Web API Service
+  - type: web
+    name: healcloud-api
+    runtime: python
+    rootDir: backend
+    plan: starter
+    region: frankfurt
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && alembic upgrade head"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/v1/health/live
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healcloud-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: healcloud-redis
+          property: connectionString
+      - key: CORS_ORIGINS
+        sync: false # Set in Render Dashboard to your Vercel domain(s), e.g. ["https://healcloud.vercel.app"]
+      - key: ALLOW_LOCAL_TARGETS
+        value: "false"
+
+  # 2. HealCloud Background Worker (Continuous Health Check Daemon)
+  - type: worker
+    name: healcloud-worker
+    runtime: python
+    rootDir: backend
+    plan: starter
+    region: frankfurt
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "python -m app.worker"
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: healcloud-api
+          envVarKey: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healcloud-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: healcloud-redis
+          property: connectionString
+      - key: ALLOW_LOCAL_TARGETS
+        value: "false"
+
+# Managed Databases
+databases:
+  - name: healcloud-postgres
+    plan: starter
+    region: frankfurt
+    databaseName: healcloud_db
+    user: healcloud
+    postgresMajorVersion: 16
