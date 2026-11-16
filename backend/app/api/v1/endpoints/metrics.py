@@ -64,3 +64,13 @@ def prometheus_metrics(db: Session = Depends(get_db)) -> Response:
     body = "\n".join(lines) + "\n"
     return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 
+
+@router.get(
+    "/metrics/aws",
+    summary="AWS Cloud Reliability & Telemetry Status",
+    description="Returns the connection, CloudWatch ingestion, and Systems Manager (SSM) driver status for AWS integration.",
+)
+def aws_reliability_status() -> dict:
+    from app.services.aws_adapter import aws_adapter
+    return aws_adapter.get_provider_status()
+

@@ -167,8 +167,14 @@ def execute_recovery_simulation(
     db.add(event_start)
     db.flush()
 
-    # 5. Simulate execution output
-    output_message = f"Simulated '{recovery_action}' against container deployment '{service.name}'. "
+    # 5. Execute via AWS Cloud Reliability & Systems Manager (SSM) Adapter
+    from app.services.aws_adapter import aws_adapter
+    aws_res = aws_adapter.execute_ssm_remediation(
+        action=recovery_action,
+        service_name=service.name,
+        target_resource=str(service.id),
+    )
+    output_message = aws_res["message"]
 
     # 6. Post-recovery verification
     execution.status = RecoveryStatusEnum.VERIFYING.value
