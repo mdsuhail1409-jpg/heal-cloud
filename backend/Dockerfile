@@ -20,10 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -m -u 1000 healcloud
+    && useradd -m -u 1000 healcloud \
+    && chown -R healcloud:healcloud /app
 
 COPY --from=builder /root/.local /home/healcloud/.local
 COPY --chown=healcloud:healcloud . .
+
+RUN chown -R healcloud:healcloud /app
 
 USER healcloud
 ENV PATH=/home/healcloud/.local/bin:$PATH
