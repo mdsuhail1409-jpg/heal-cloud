@@ -391,6 +391,30 @@ class ApiClient {
   async listAuditLogs(orgId: string, limit = 100): Promise<AuditLog[]> {
     return this.request<AuditLog[]>(`/organizations/${orgId}/audit-logs?limit=${limit}`)
   }
+
+  async getAwsStatus(): Promise<any> {
+    return this.request<any>('/metrics/aws')
+  }
+
+  async pushCloudWatchMetric(serviceName = 'payment-gateway', latencyMs = 45.2): Promise<any> {
+    return this.request<any>(
+      `/metrics/aws/cloudwatch-push?service_name=${encodeURIComponent(serviceName)}&latency_ms=${latencyMs}`,
+      { method: 'POST' }
+    )
+  }
+
+  async triggerSnsAlert(
+    serviceName = 'payment-gateway',
+    severity = 'CRITICAL',
+    summary = 'Simulated latency spike'
+  ): Promise<any> {
+    return this.request<any>(
+      `/metrics/aws/sns-alert?service_name=${encodeURIComponent(serviceName)}&severity=${encodeURIComponent(
+        severity
+      )}&summary=${encodeURIComponent(summary)}`,
+      { method: 'POST' }
+    )
+  }
 }
 
 export const api = new ApiClient()
