@@ -74,3 +74,66 @@ def aws_reliability_status() -> dict:
     from app.services.aws_adapter import aws_adapter
     return aws_adapter.get_provider_status()
 
+
+@router.post(
+    "/metrics/aws/cloudwatch-push",
+    summary="Push Telemetry to Amazon CloudWatch",
+    description="Pushes real-time service latency metrics into Amazon CloudWatch under the 'HealCloud/Telemetry' namespace.",
+)
+def push_to_cloudwatch(
+    service_name: str = "payment-gateway",
+    latency_ms: float = 48.5,
+) -> dict:
+    from app.services.aws_adapter import aws_adapter
+    return aws_adapter.push_cloudwatch_metric(
+        service_name=service_name,
+        metric_name="TargetResponseTime",
+        value=latency_ms,
+        unit="Milliseconds",
+    )
+
+
+@router.post(
+    "/metrics/aws/sns-alert",
+    summary="Dispatch On-Call SRE Alert via Amazon SNS",
+    description="Publishes an immediate emergency incident notification to an Amazon SNS topic.",
+)
+def trigger_sns_alert(
+    service_name: str = "order-processing-api",
+    severity: str = "CRITICAL",
+    summary: str = "HTTP 503 Service Unavailable burst detected",
+) -> dict:
+    from app.services.aws_adapter import aws_adapter
+    return aws_adapter.publish_sns_incident_alert(
+        incident_id="INC-AWS-DEMO-001",
+        service_name=service_name,
+        severity=severity,
+        title=summary,
+        hypothesis="Upstream connection pool exhaustion detected. Automated remediation queued.",
+    )
+
+
+@router.post(
+    "/metrics/aws/s3-archive",
+    summary="Archive Compliance Audit Log to Amazon S3",
+    description="Generates an immutable JSON compliance archive of recent system audit logs and stores it in Amazon S3.",
+)
+def archive_audit_to_s3(db: Session = Depends(get_db)) -> dict:
+    from app.services.aws_adapter import aws_adapter
+    from app.models.audit import AuditLog
+
+    logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(25).all()
+    records = [
+        {
+            "id": str(l.id),
+            "action": l.action,
+            "resource_type": l.resource_type,
+            "resource_id": l.resource_id,
+            "user_email": l.user_email,
+            "ip_address": l.ip_address,
+            "created_at": l.created_at.isoformat() if l.created_at else None,
+        }
+        for l in logs
+    ]
+    return aws_adapter.export_audit_snapshot_to_s3(audit_records=records)
+
